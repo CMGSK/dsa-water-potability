@@ -26,7 +26,6 @@ def missing_val_imputation_by_mean(data: pd.DataFrame):
             noise = np.random.normal(loc=0, scale=(stdd*0.05), size=len(nan_idx))
             data_copy.loc[nan_idx, column] = mean + noise
 
-    print(data_copy)
     return data_copy
 
 
@@ -89,7 +88,6 @@ def implement_scaling_method(x_train, x_test, approach=None):
             x_test_sc = (x_test - mean) / std
 
             return (x_train_sc, x_test_sc)
-
 
 
 
@@ -176,13 +174,59 @@ def naive_approach(dist_approach=None, dap=None, **kwargs):
         x_train_sc = (x_train - mean) / std
         x_test_sc = (x_test - mean) / std
 
-    k_benchmark(x_train_sc, y_train, x_test_sc, y_test, dist_approach, dap)
-    # return (x_train, x_train_sc, x_test, x_test_sc, y_train, y_test)
+    if (only_load_model := kwargs['only_load_model']) and not only_load_model:
+        k_benchmark(x_train_sc, y_train, x_test_sc, y_test, dist_approach, dap)
+
+    return (x_train, x_train_sc, x_test, x_test_sc, y_train, y_test)
+
+class WaterSource:
+    ph: float
+    hardness: float
+    solids: float
+    chloramines: float
+    sulfate: float
+    conductivity: float
+    organic_carbon: float
+    trihalomethanes: float
+    turbidity: float
+
+    def __init__(self, ph, hardness, solids, chloramines, sulfate, conductivity, organic_carbon, trihalomethanes, turbidity):
+        self.ph = ph
+        self.hardness = hardness
+        self.solids =  solids
+        self.chloramines = chloramines
+        self.sulfate = sulfate
+        self.conductivity = conductivity
+        self.organic_carbon = organic_carbon
+        self.trihalomethanes = trihalomethanes
+        self.turbidity = turbidity
+
+    
+    def mount(self):
+        data = {
+            'ph': self.ph,
+            'Hardness': self.hardness,
+            'Solids': self.solids,
+            'Chloramines': self.chloramines,
+            'Sulfate': self.sulfate,
+            'Conductivity': self.conductivity,
+            'Organic_carbon': self.organic_carbon,
+            'Trihalomethanes': self.trihalomethanes,
+            'Turbidity': self.turbidity
+        }
+
+        return pd.Series(data).values.reshape(1, -1)  # Single shape 1 row N col
+
+
 
 
 def main():
+    x_train, x_train_sc, x_test, x_test_sc, y_train, y_test = naive_approach(dist_approach='min', dap=1.5, imputation=True, scaling='uvs', only_load_model=True)
+    water = WaterSource(4.668101687405915,193.68173547507868,47580.99160333534,7.166638935482532,359.94857436696,526.4241709223593,13.894418518194527,66.68769478539706,4.4358209095098).mount()
+    print(f'Water source potability: {bool(knn_predict(x_train, y_train, water, 33, 'cos'))}')
+
+
     # x_train, x_train_sc, x_test, x_test_sc, y_train, y_test = naive_approach()
-    x_train, x_train_sc, x_test, x_test_sc, y_train, y_test = naive_approach(dist_approach='min', dap=1.5, imputation=True, scaling='uvs')
     # k_benchmark(x_train_sc, y_train, x_test_sc, y_test)
     # knn_predict()
     # ds = pd.read_csv('../water_potability.csv')
@@ -191,7 +235,8 @@ def main():
 
 if __name__ == "__main__":
     # Eliminated from the dataset for out-of-code testing
-    # 4.668101687405915,193.68173547507868,47580.99160333534,7.166638935482532,359.94857436696,526.4241709223593,13.894418518194527,66.68769478539706,4.4358209095098,1
+    # 4.668101687405915,193.68173547507868,47580.99160333534,7.166638935482532,359.94857436696,526.4241709223593,13.894418518194527,66.68769478539706,4.4358209095098
+    # Should return: 1
     main()
 
 
