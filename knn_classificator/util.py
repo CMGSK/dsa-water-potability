@@ -84,37 +84,6 @@ def implement_scaling_method(x_train, x_test, approach=None):
 
             return (x_train_sc, x_test_sc)
 
-def knn_predict_cost_sensitive_bias(x_train, y_train, x_test, k=5, dist_approach=None, dap=None, threshold=0.4):
-    """
-    K Nearest Neighbours. Calculate distance from test point to all training points, find K nearest neighbours,
-    most common class among K neighbours wins where K is a 5 fallback, user-inputed number of neighbours.
-    """
-    # First step. Calculate all distances
-    print(f"'{dist_approach}' distance calculations approach")
-    distances = []
-    for ix, tr in enumerate(x_train):
-        dist = calculate_distances(x_test, tr, dist_approach, dap)
-        distances.append((dist, y_train[ix]))  # Stores a tuple (distance, label)
-
-    # Second step. Sort by distance, take K closest
-    distances.sort(key=lambda x: x[0])  # Sorts by the first element in the tuple (dist)
-    kn = distances[:k]
-
-    # Third step. Count occurrences.
-    labels = [label for _, label in kn]  # Extract labels from k nearest disregarding distance
-    count = Counter(labels)
-    non_potable = count.get(0, 0)
-
-    # Fourth step. Biased votation.
-    # If non-potable count exceeds a threshold, divert the vote.
-    if (non_potable / k) > threshold:
-        return 0
-    else:
-        return count.most_common(1)[0][0]
-
-
-    return vote
-
 
 def k_benchmark(x_train_sc, y_train, x_test_sc, y_test, dist_approach=None, dap=None):
     acc = []
